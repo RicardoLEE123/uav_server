@@ -228,7 +228,7 @@ int main(int argc, char** argv) {
     nh.param("uav_server/loop_rate", loop_rate, 50.0);
     nh.param("uav_server/takeoff_height", takeoff_height, 1.0);
 
-    RCInFilter filter(5, 100.0);
+    RCInFilter filter(3, 750.0);
 
     // Subscribers and Publishers
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>("/mavros/state", 10, stateCallback);

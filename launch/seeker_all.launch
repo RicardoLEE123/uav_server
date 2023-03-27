@@ -1,0 +1,29 @@
+<launch>
+    <include file="$(find seeker_utils)/launch/seeker_v1.launch"/>
+    <include file="$(find seeker_utils)/launch/vins.launch"/>
+    <include file="$(find uav_server)/launch/single_uav.launch"/>
+    <include file="$(find uav_server)/launch/uav_server.launch"/>
+
+    <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
+        <arg name="address" default="127.0.0.1"/>
+    </include>
+
+    <arg name="host_from" default="127.0.0.1" />
+    <arg name="port_from" default="9090" />
+    <arg name="host_to" default="192.168.10.237" />
+    <arg name="port_to" default="9090" />
+    <arg name="use_id_for_ns" default="true" />
+    <arg name="websocket_start_delay" default="5.0" />
+
+    <node name="throttle_odomimu" pkg="topic_tools" type="throttle" args="messages /ov_msckf/odomimu 30" output="screen"/>
+
+    <node name="rosbridge_to_rosbridge" pkg="uav_server" type="rosbridge_to_rosbridge.py" launch-prefix="bash -c 'sleep $(arg websocket_start_delay); $0 $@' ">
+        <param name="host_from" value="$(arg host_from)" />
+        <param name="port_from" value="$(arg port_from)" />
+        <param name="host_to" value="$(arg host_to)" />
+        <param name="port_to" value="$(arg port_to)" />
+        <param name="use_id_for_ns" value="$(arg use_id_for_ns)" />
+    </node>
+
+</launch>
+
