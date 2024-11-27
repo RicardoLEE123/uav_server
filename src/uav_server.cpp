@@ -52,6 +52,9 @@ void rcCallback(const mavros_msgs::RCInConstPtr& msg) {
     } else if (ch71_value > 1500) {
         uav_state = LAND; // 切换状态为LAND
     }
+    else {
+        uav_state = HOLD;
+    }
 }
 
 
