@@ -1,2 +1,4 @@
 build/
 devel/
+# Ignore all .bag files
+*.bag
