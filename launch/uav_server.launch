@@ -1,0 +1,8 @@
+<launch>
+    <node pkg="uav_server" type="uav_server" name="uav_server" output="screen">
+        <param name="uav_server/loop_rate" value="50.0"/>
+        <param name="uav_server/takeoff_height" value="0.7"/>
+        <param name="uav_server/traj_file" value="$(find uav_server)/config/traj_0.txt" />
+        <remap from="/uav_odom" to="/ov_msckf/odomimu" />
+    </node>
+</launch>
