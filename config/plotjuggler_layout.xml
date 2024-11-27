@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PlotJuggler>
+    <Plugins>
+        <Streaming>
+            <enabled>true</enabled>
+            <buffer_size>10000</buffer_size>
+        </Streaming>
+    </Plugins>
+    <MainWindow>
+        <geometry>800x600+100+100</geometry>
+        <plots>
+            <Plot>
+                <title>Local Position</title>
+                <curves>
+                    <Curve topic="/mavros/setpoint_raw/local.position.x" label="Local Position X" />
+                    <Curve topic="/mavros/setpoint_raw/local.position.y" label="Local Position Y" />
+                    <Curve topic="/mavros/setpoint_raw/local.position.z" label="Local Position Z" />
+                </curves>
+            </Plot>
+            <Plot>
+                <title>Odometry Position</title>
+                <curves>
+                    <Curve topic="/uav_odom.pose.pose.position.x" label="Odometry Position X" />
+                    <Curve topic="/uav_odom.pose.pose.position.y" label="Odometry Position Y" />
+                    <Curve topic="/uav_odom.pose.pose.position.z" label="Odometry Position Z" />
+                </curves>
+            </Plot>
+        </plots>
+    </MainWindow>
+</PlotJuggler>

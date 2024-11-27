@@ -11,6 +11,16 @@ git clone https://github.com/RicardoLEE123/uav_server.git
 roslaunch uav_server uav_server.launch
 ```
 
+## 安装可视化日志分析
+、、、
+sudo apt install ros-noetic-plotjuggler
+sudo apt install ros-noetic-plotjuggler-ros
+```
+
+使用
+```
+roslaunch uav_server bagplay.launch 
+```
 
 ## 遥控器设置
 
