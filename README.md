@@ -12,7 +12,8 @@ roslaunch uav_server uav_server.launch
 ```
 
 ## 安装可视化日志分析
-、、、
+
+```
 sudo apt install ros-noetic-plotjuggler
 sudo apt install ros-noetic-plotjuggler-ros
 ```
