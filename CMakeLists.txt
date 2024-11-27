@@ -20,11 +20,7 @@ add_executable(uav_server src/uav_server.cpp)
 target_link_libraries(uav_server  ${catkin_LIBRARIES}
 )
 
-## 添加安装规则
-# install(TARGETS uav_server
-#   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+# add_executable(record src/record.cpp)
+# target_link_libraries(record  ${catkin_LIBRARIES}
 # )
 
-# install(DIRECTORY launch config
-#   DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-# )

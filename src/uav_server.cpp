@@ -181,6 +181,8 @@ int main(int argc, char** argv) {
 
             case TAKEOFF: {
                 mavros_msgs::PositionTarget takeoff_pose;
+                takeoff_pose.header.stamp = ros::Time::now();     // 当前时间
+                takeoff_pose.header.frame_id = "world";           // 坐标系设置为 world
                 takeoff_pose.position.x = 0.0;
                 takeoff_pose.position.y = 0.0;
                 takeoff_pose.position.z =-takeoff_height;
@@ -207,6 +209,8 @@ int main(int argc, char** argv) {
             case EXECUTE_TRAJECTORY:
                 if (trajectory_index < trajectory.size()) {
                      mavros_msgs::PositionTarget traj_point;
+                     traj_point.header.stamp = ros::Time::now();     // 当前时间
+                     traj_point.header.frame_id = "world";           // 坐标系设置为 world
                      traj_point.position.x =  trajectory[trajectory_index].position.y;
                      traj_point.position.y =  trajectory[trajectory_index].position.x;
                      traj_point.position.z =  -trajectory[trajectory_index].position.z;
@@ -219,11 +223,18 @@ int main(int argc, char** argv) {
                 break;
 
             case LAND: {
-                mavros_msgs::PositionTarget land_pose;
-                land_pose.position.x = uav_odom.pose.pose.position.y;
-                land_pose.position.y = uav_odom.pose.pose.position.x;
-                land_pose.position.z = 0.0;
-                local_pos_pub.publish(land_pose);
+                static bool land_pose_published = false;
+                if (!land_pose_published) {
+                    mavros_msgs::PositionTarget land_pose;
+                    land_pose.header.stamp = ros::Time::now();     // 当前时间
+                    land_pose.header.frame_id = "world";           // 坐标系设置为 world
+                    land_pose.position.x = uav_odom.pose.pose.position.y;
+                    land_pose.position.y = uav_odom.pose.pose.position.x;
+                    land_pose.position.z = 0.0;
+                    local_pos_pub.publish(land_pose);
+
+                    land_pose_published = true; // 确保只发布一次
+                }
 
                 if ((ros::Time::now() - state_entry_time).toSec() >= 6.0) {
                     uav_state = DISARM;

@@ -1,0 +1,10 @@
+<launch>
+    <arg name="bag_file" default="$(find uav_server)/data/uav_record_2024-11-27-17-30-42.bag" />
+    
+    <node pkg="rosbag" type="play" name="rosbag_play" output="screen">
+        <param name="bag_filename" value="$(arg bag_file)" />
+    </node>
+
+    <!-- 启动 rqt_plot -->
+    <node pkg="rqt_plot" type="rqt_plot" name="rqt_plot" output="screen" />
+</launch>
