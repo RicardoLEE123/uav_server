@@ -3,10 +3,14 @@
 ## 代码下载
 运行以下命令克隆代码到本地：
 ```
-git clone git@github.com:yourusername/uav_server.git
+git clone https://github.com/RicardoLEE123/uav_server.git
 
 ```
 
+## 代码使用
+```
+roslaunch uav_server uav_server.launch
+```
 
 
 ## 遥控器设置
