@@ -40,23 +40,31 @@ void stateCallback(const mavros_msgs::State::ConstPtr& msg) {
 }
 
 void rcCallback(const mavros_msgs::RCInConstPtr& msg) {
+    // 定义静态变量，用于记录是否已经进入过TAKEOFF状态
+    static bool has_taken_off = false;
+
     // 获取第69号通道值
     uint16_t ch69_value = msg->channels[68]; 
-    if (ch69_value > 1500) {
+    if (!has_taken_off && ch69_value > 1500) { 
+        // 如果尚未进入过TAKEOFF状态且第69通道值大于1500
         uav_state = TAKEOFF; // 切换状态为 TAKEOFF
+        has_taken_off = true; // 标记为已进入TAKEOFF状态
+        return; // 在进入TAKEOFF后，立即返回，不再执行后续逻辑
     }
+
     // 获取第71号通道值
-    uint16_t ch71_value = msg->channels[70]; //
-    if (ch71_value < 500) {
-        uav_state = EXECUTE_TRAJECTORY ; // 切换状态为EXECUTE_TRAJECTORY
-    } else if (ch71_value > 1500) {
-        uav_state = LAND; // 切换状态为LAND
-    }
-    else {
-        uav_state = HOLD;
+    uint16_t ch71_value = msg->channels[70]; 
+    if (has_taken_off) { 
+        // 仅在已进入过TAKEOFF状态后，响应71号通道的状态
+        if (ch71_value < 500) {
+            uav_state = EXECUTE_TRAJECTORY; // 切换状态为 EXECUTE_TRAJECTORY
+        } else if (ch71_value > 1500) {
+            uav_state = LAND; // 切换状态为 LAND
+        } else {
+            uav_state = HOLD; // 切换状态为 HOLD
+        }
     }
 }
-
 
 bool readTrajectory(const std::string& file_path, std::vector<mavros_msgs::PositionTarget>& trajectory) {
     std::ifstream file(file_path);
