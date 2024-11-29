@@ -9,6 +9,9 @@
 #include <fstream>
 #include <sstream>
 #include <nav_msgs/Odometry.h>
+#include <numeric> 
+#include <vector>
+#include <array>
 
 enum UAVState { IDLE, TAKEOFF, HOLD, EXECUTE_TRAJECTORY, LAND, ARM, DISARM }; 
 
@@ -39,13 +42,14 @@ void stateCallback(const mavros_msgs::State::ConstPtr& msg) {
     current_state = *msg;
 }
 
+/*
 void rcCallback(const mavros_msgs::RCInConstPtr& msg) {
     // 定义静态变量，用于记录是否已经进入过TAKEOFF状态
     static bool has_taken_off = false;
 
     // 获取第69号通道值
-    uint16_t ch69_value = msg->channels[68]; 
-    if (!has_taken_off && ch69_value > 1500) { 
+    uint16_t ch69_value = msg->channels[68];
+    if (!has_taken_off && ch69_value > 1500) {
         // 如果尚未进入过TAKEOFF状态且第69通道值大于1500
         uav_state = TAKEOFF; // 切换状态为 TAKEOFF
         has_taken_off = true; // 标记为已进入TAKEOFF状态
@@ -53,8 +57,8 @@ void rcCallback(const mavros_msgs::RCInConstPtr& msg) {
     }
 
     // 获取第71号通道值
-    uint16_t ch71_value = msg->channels[70]; 
-    if (has_taken_off) { 
+    uint16_t ch71_value = msg->channels[70];
+    if (has_taken_off) {
         // 仅在已进入过TAKEOFF状态后，响应71号通道的状态
         if (ch71_value < 500) {
             uav_state = EXECUTE_TRAJECTORY; // 切换状态为 EXECUTE_TRAJECTORY
@@ -65,6 +69,90 @@ void rcCallback(const mavros_msgs::RCInConstPtr& msg) {
         }
     }
 }
+*/
+
+class RCInFilter {
+public:
+    RCInFilter(size_t window_size, double threshold)
+        : window_size_(window_size), threshold_(threshold) {
+        // 初始化通道数据
+        channel_data_[68].reserve(window_size);
+        channel_data_[69].reserve(window_size);
+	channel_data_[70].reserve(window_size);
+    }
+
+    void filter(const mavros_msgs::RCInConstPtr& msg) {
+        // 更新通道数据
+        updateChannelData(68, msg->channels[68]);
+        updateChannelData(69, msg->channels[69]);
+	updateChannelData(70, msg->channels[70]);
+
+        // 获取过滤后的值
+        uint16_t filtered_channel68 = getFilteredValue(68);
+        uint16_t filtered_channel69 = getFilteredValue(69);
+	uint16_t filtered_channel70 = getFilteredValue(70);
+
+	// 获取第69号通道值
+        uint16_t ch69_value = filtered_channel68;
+        if (ch69_value > 1500) {
+            uav_state = TAKEOFF; // 切换状态为 TAKEOFF
+        }
+
+        // 获取第71号通道值
+        uint16_t ch71_value = filtered_channel70;
+        // 仅在已进入过TAKEOFF状态后，响应71号通道的状态
+        if (ch71_value < 500) {
+            uav_state = EXECUTE_TRAJECTORY; // 切换状态为 EXECUTE_TRAJECTORY
+        } else if (ch71_value > 1500) {
+            uav_state = LAND; // 切换状态为 LAND
+        } else {
+            uav_state = HOLD; // 切换状态为 HOLD
+        }
+        
+        // 输出过滤后的值（或进行其他处理）
+        ROS_INFO("Filtered channel: %d, channel: %d", filtered_channel68, filtered_channel70);
+    }
+
+private:
+    size_t window_size_;
+    double threshold_;
+    //std::map<int, std::vector<int16_t>> channel_data_;
+    std::array<std::vector<uint16_t>, 80> channel_data_;
+
+
+    void updateChannelData(size_t channel_index, uint16_t value) {
+        // 如果数据超过窗口大小，移除最旧的数据
+        if (channel_data_[channel_index].size() >= window_size_) {
+            channel_data_[channel_index].erase(channel_data_[channel_index].begin());
+        }
+        // 添加新数据到窗口
+        channel_data_[channel_index].push_back(value);
+    }
+
+    int16_t getFilteredValue(size_t channel_index) {
+        // 如果数据不足以计算平均值，直接返回当前值
+        if (channel_data_[channel_index].size() < window_size_) {
+            return channel_data_[channel_index].back();
+        }
+
+        // 计算平均值
+        double average = std::accumulate(channel_data_[channel_index].begin(),
+                                         channel_data_[channel_index].end(), 0.0) / window_size_;
+
+        // 计算当前值与平均值的差异
+        double deviation = std::abs(channel_data_[channel_index].back() - average);
+
+        // 如果差异超过阈值，则认为当前值是异常值，用平均值替换
+        if (deviation > threshold_) {
+            ROS_WARN("Detected outlier in channel[%zu]: %d, replacing with average: %f",
+                     channel_index, channel_data_[channel_index].back(), average);
+            return static_cast<uint16_t>(average);
+        }
+
+        // 否则返回当前值
+        return channel_data_[channel_index].back();
+    }
+};
 
 bool readTrajectory(const std::string& file_path, std::vector<mavros_msgs::PositionTarget>& trajectory) {
     std::ifstream file(file_path);
@@ -140,9 +228,11 @@ int main(int argc, char** argv) {
     nh.param("uav_server/loop_rate", loop_rate, 50.0);
     nh.param("uav_server/takeoff_height", takeoff_height, 1.0);
 
+    RCInFilter filter(5, 100.0);
+
     // Subscribers and Publishers
     ros::Subscriber state_sub = nh.subscribe<mavros_msgs::State>("/mavros/state", 10, stateCallback);
-    ros::Subscriber rc_sub = nh.subscribe<mavros_msgs::RCIn>("/mavros/rc/in", 10, rcCallback);
+    ros::Subscriber rc_sub = nh.subscribe<mavros_msgs::RCIn>("/mavros/rc/in", 10, boost::bind(&RCInFilter::filter, &filter, _1));
     ros::Publisher local_pos_pub = nh.advertise<mavros_msgs::PositionTarget>("/mavros/setpoint_raw/local", 10);
     ros::Subscriber odom_sub = nh.subscribe<nav_msgs::Odometry>("/uav_odom", 10, odomCallback);
 
@@ -197,6 +287,9 @@ int main(int argc, char** argv) {
                 takeoff_pose.position.x = 0.0;
                 takeoff_pose.position.y = 0.0;
                 takeoff_pose.position.z =-takeoff_height;
+                takeoff_pose.yaw = 1.57;
+                takeoff_pose.yaw_rate = 0.0f;
+
                 // takeoff_pose.pose.position.x = 0.0;
                 // takeoff_pose.pose.position.y = 0.0;
                 // takeoff_pose.pose.position.z = -takeoff_height;
@@ -225,6 +318,9 @@ int main(int argc, char** argv) {
                      traj_point.position.x =  trajectory[trajectory_index].position.y;
                      traj_point.position.y =  trajectory[trajectory_index].position.x;
                      traj_point.position.z =  -trajectory[trajectory_index].position.z;
+                     traj_point.yaw = 1.57;
+                     traj_point.yaw_rate = 0.0f;
+
                     local_pos_pub.publish(traj_point);
                     trajectory_index++;
                 } else {
@@ -235,17 +331,22 @@ int main(int argc, char** argv) {
 
             case LAND: {
                 static bool land_pose_published = false;
+		static mavros_msgs::PositionTarget land_pose;
                 if (!land_pose_published) {
-                    mavros_msgs::PositionTarget land_pose;
+                    //mavros_msgs::PositionTarget land_pose;
                     land_pose.header.stamp = ros::Time::now();     // 当前时间
                     land_pose.header.frame_id = "world";           // 坐标系设置为 world
                     land_pose.position.x = uav_odom.pose.pose.position.y;
                     land_pose.position.y = uav_odom.pose.pose.position.x;
                     land_pose.position.z = 0.0;
-                    local_pos_pub.publish(land_pose);
+                    land_pose.yaw = 1.57;
+                    land_pose.yaw_rate = 0.0f;
+                    //local_pos_pub.publish(land_pose);
 
                     land_pose_published = true; // 确保只发布一次
                 }
+		local_pos_pub.publish(land_pose);
+
 
                 if ((ros::Time::now() - state_entry_time).toSec() >= 6.0) {
                     uav_state = DISARM;
