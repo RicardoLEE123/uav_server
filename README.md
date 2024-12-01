@@ -65,8 +65,10 @@ roslaunch uav_server bagplay.launch
 ```
 
 3. 卸载&重装
+```
     md5sum seeker_utils/config/seeker1/kalibr_cam_*
-    
+    rosrun robot_upstart uninstall seeker
+```
 
 ## 未解决的问题
 1. 需要记录每次飞行的轨迹 ✅  
