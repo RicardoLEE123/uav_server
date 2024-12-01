@@ -2,3 +2,4 @@ build/
 devel/
 # Ignore all .bag files
 *.bag
+*.tar.gz

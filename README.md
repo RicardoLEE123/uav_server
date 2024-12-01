@@ -50,6 +50,24 @@ roslaunch uav_server bagplay.launch
 每次飞行都会记录发送的轨迹和odom信息，最新一次的飞行保存在最新的日志中，可以提取对应日志并基于可视化进行查看，日志保存在```data```路径下
 
 
+### 飞机的odom代码更新步骤
+1. 备份
+```
+    cp -r /home/vslam/catkin_ws_vins/src/seeker_utils /home/vslam
+```
+
+2. 删除&更新
+```
+    rm -rf catkin_ws_vins
+    scp -r /home/uav/water_swarm/src/uav_simulator/Utils/uav_server/source/catkin_ws_vins_omni_new_pub.tar.gz vslam@10.42.0.2:/home/vslam
+    tar -zxvpf catkin_ws_vins_omni_new_pub.tar.gz
+    sync
+```
+
+3. 卸载&重装
+    md5sum seeker_utils/config/seeker1/kalibr_cam_*
+    
+
 ## 未解决的问题
 1. 需要记录每次飞行的轨迹 ✅  
 2. 轨迹启动的时候很长，明确切换状态延迟的原因 (check代码) ✅  
