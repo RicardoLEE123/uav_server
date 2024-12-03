@@ -8,5 +8,9 @@
     </node>
 
     <!-- Rosbag Record Node -->
-    <node pkg="rosbag" type="record" name="rosbag_record" output="screen" required="true" args="-o $(find uav_server)/data/uav_record --lz4 /mavros/setpoint_raw/local /uav_odom" />
+    <node pkg="rosbag" type="record" name="rosbag_record" output="screen" required="true"
+        args="-o $(find uav_server)/data/uav_record --lz4 
+                /mavros/setpoint_raw/local 
+                /ov_msckf/odomimu 
+                /drone_0_ego_planner_node/grid_map/occupancy_inflate"/>
 </launch>

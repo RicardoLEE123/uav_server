@@ -1,0 +1,8 @@
+<launch>  
+   <node name="rviz" pkg="rviz" type="rviz"
+      args="-d $(find uav_server)/config/rviz.rviz"
+      />
+ </launch>
+
+
+
