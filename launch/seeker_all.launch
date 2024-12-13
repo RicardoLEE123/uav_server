@@ -1,8 +1,7 @@
 <launch>
     <include file="$(find seeker_utils)/launch/seeker_v1.launch"/>
     <include file="$(find seeker_utils)/launch/vins.launch"/>
-    <include file="$(find uav_server)/launch/single_uav.launch"/>
-    <include file="$(find uav_server)/launch/uav_server.launch"/>
+    <include file="$(find uav_server)/launch/sph_experiment.launch"/>
 
     <include file="$(find rosbridge_server)/launch/rosbridge_websocket.launch">
         <arg name="address" default="127.0.0.1"/>

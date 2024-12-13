@@ -6,10 +6,12 @@ find_package(catkin REQUIRED COMPONENTS
   mavros
   mavros_msgs
   std_msgs
+  tf
+  common_msgs
 )
 
 catkin_package(
-  CATKIN_DEPENDS roscpp mavros mavros_msgs std_msgs
+  CATKIN_DEPENDS roscpp mavros mavros_msgs std_msgs tf common_msgs
 )
 
 include_directories(
@@ -20,7 +22,6 @@ add_executable(uav_server src/uav_server.cpp)
 target_link_libraries(uav_server  ${catkin_LIBRARIES}
 )
 
-# add_executable(record src/record.cpp)
-# target_link_libraries(record  ${catkin_LIBRARIES}
-# )
-
+add_executable(camera_pose_tf src/camera_pose_tf.cpp)
+target_link_libraries(camera_pose_tf  ${catkin_LIBRARIES}
+)

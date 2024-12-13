@@ -1,0 +1,37 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "${default}",
+        "limitSymbolsToIncludedHeaders": false
+      },
+      "includePath": [
+        "/home/uav/Swarm-Realflight/devel/include/**",
+        "/home/uav/water_swarm/devel/include/**",
+        "/opt/ros/noetic/include/**",
+        "/home/uav/Swarm-Realflight/src/bspline_traj/include/**",
+        "/home/uav/Swarm-Realflight/src/common_msgs/include/**",
+        "/home/uav/Swarm-Realflight/src/communication/include/**",
+        "/home/uav/water_swarm/src/uav_simulator/dynamic_map_generator/include/**",
+        "/home/uav/water_swarm/src/uav_simulator/Utils/multi_map_server/include/**",
+        "/home/uav/Swarm-Realflight/src/path_searching/include/**",
+        "/home/uav/Swarm-Realflight/src/plan_env/include/**",
+        "/home/uav/water_swarm/src/uav_simulator/Utils/pose_utils/include/**",
+        "/home/uav/water_swarm/src/uav_simulator/Utils/quadrotor_msgs/include/**",
+        "/home/uav/water_swarm/src/uav_simulator/so3_control/include/**",
+        "/home/uav/water_swarm/src/uav_simulator/so3_quadrotor_simulator/include/**",
+        "/home/uav/Swarm-Realflight/src/target_publisher/include/**",
+        "/home/uav/Swarm-Realflight/src/uav_server/include/**",
+        "/home/uav/water_swarm/src/uav_simulator/Utils/uav_utils/include/**",
+        "/home/uav/Swarm-Realflight/src/water_swarm/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS",
+      "intelliSenseMode": "gcc-x64",
+      "compilerPath": "/usr/bin/gcc",
+      "cStandard": "gnu11",
+      "cppStandard": "c++14"
+    }
+  ],
+  "version": 4
+}

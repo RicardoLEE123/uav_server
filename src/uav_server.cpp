@@ -12,6 +12,7 @@
 #include <numeric> 
 #include <vector>
 #include <array>
+#include "common_msgs/common_msgs.h"
 
 enum UAVState { IDLE, TAKEOFF, HOLD, EXECUTE_TRAJECTORY, LAND, ARM, DISARM }; 
 
@@ -37,39 +38,24 @@ mavros_msgs::State current_state;
 int rc_channel = 0;
 size_t trajectory_index = 0;
 bool odom_received = false; // 标记是否收到 odom 消息
+bool use_predefined_traj_;
+
+common_msgs::Particle particle_cmd;
 
 void stateCallback(const mavros_msgs::State::ConstPtr& msg) {
     current_state = *msg;
 }
 
-/*
-void rcCallback(const mavros_msgs::RCInConstPtr& msg) {
-    // 定义静态变量，用于记录是否已经进入过TAKEOFF状态
-    static bool has_taken_off = false;
-
-    // 获取第69号通道值
-    uint16_t ch69_value = msg->channels[68];
-    if (!has_taken_off && ch69_value > 1500) {
-        // 如果尚未进入过TAKEOFF状态且第69通道值大于1500
-        uav_state = TAKEOFF; // 切换状态为 TAKEOFF
-        has_taken_off = true; // 标记为已进入TAKEOFF状态
-        return; // 在进入TAKEOFF后，立即返回，不再执行后续逻辑
-    }
-
-    // 获取第71号通道值
-    uint16_t ch71_value = msg->channels[70];
-    if (has_taken_off) {
-        // 仅在已进入过TAKEOFF状态后，响应71号通道的状态
-        if (ch71_value < 500) {
-            uav_state = EXECUTE_TRAJECTORY; // 切换状态为 EXECUTE_TRAJECTORY
-        } else if (ch71_value > 1500) {
-            uav_state = LAND; // 切换状态为 LAND
-        } else {
-            uav_state = HOLD; // 切换状态为 HOLD
-        }
+void swarmParticlesCallback(const common_msgs::Swarm_particles::ConstPtr& msg)
+{
+    if (!msg->particles.empty()) {
+        // 更新全局变量为第一个粒子的信息
+        particle_cmd = msg->particles[0];
+        ROS_INFO_STREAM("Updated particle_cmd with index: " << particle_cmd.index);
+    } else {
+        ROS_WARN("Received /swarm_particles message, but no particles present.");
     }
 }
-*/
 
 class RCInFilter {
 public:
@@ -227,6 +213,7 @@ int main(int argc, char** argv) {
     nh.param("uav_server/traj_file", traj_file, std::string("/path/to/traj_0.txt"));
     nh.param("uav_server/loop_rate", loop_rate, 50.0);
     nh.param("uav_server/takeoff_height", takeoff_height, 1.0);
+    nh.param("uav_server/use_predefined_traj_", use_predefined_traj_, false);    
 
     RCInFilter filter(3, 750.0);
 
@@ -235,6 +222,7 @@ int main(int argc, char** argv) {
     ros::Subscriber rc_sub = nh.subscribe<mavros_msgs::RCIn>("/mavros/rc/in", 10, boost::bind(&RCInFilter::filter, &filter, _1));
     ros::Publisher local_pos_pub = nh.advertise<mavros_msgs::PositionTarget>("/mavros/setpoint_raw/local", 10);
     ros::Subscriber odom_sub = nh.subscribe<nav_msgs::Odometry>("/uav_odom", 10, odomCallback);
+    ros::Subscriber swarm_sub = nh.subscribe("/swarm_particles", 10, swarmParticlesCallback);
 
     // Service Clients
     ros::ServiceClient arming_client = nh.serviceClient<mavros_msgs::CommandBool>("/mavros/cmd/arming");
@@ -244,9 +232,12 @@ int main(int argc, char** argv) {
     ros::Rate rate(loop_rate);
     std::vector<mavros_msgs::PositionTarget> trajectory;
 
-    if (readTrajectory(traj_file, trajectory))
+    if (use_predefined_traj_)
     {
-        ROS_INFO("\033[1;32mSuccess read trajectory\033[0m");
+        if (readTrajectory(traj_file, trajectory))
+        {
+            ROS_INFO("\033[1;32mSuccess read trajectory\033[0m");
+        }
     }
 
     while (ros::ok()) {
@@ -272,13 +263,15 @@ int main(int argc, char** argv) {
         //         z = -z
         switch (uav_state) 
         {
-            case IDLE:
+            case IDLE:{
                 break;
+            }
 
-            case ARM:
+            case ARM:{
                 // arm(arming_client, set_mode_client, local_pos_pub, takeoff_height);
                 uav_state = TAKEOFF;
                 break;
+            }
 
             case TAKEOFF: {
                 mavros_msgs::PositionTarget takeoff_pose;
@@ -290,9 +283,6 @@ int main(int argc, char** argv) {
                 takeoff_pose.yaw = 1.57;
                 takeoff_pose.yaw_rate = 0.0f;
 
-                // takeoff_pose.pose.position.x = 0.0;
-                // takeoff_pose.pose.position.y = 0.0;
-                // takeoff_pose.pose.position.z = -takeoff_height;
                 local_pos_pub.publish(takeoff_pose);
 
                 if (uav_odom.pose.pose.position.z >= takeoff_pose.position.z) {
@@ -302,36 +292,46 @@ int main(int argc, char** argv) {
             }
 
             case HOLD: {
-                // mavros_msgs::PositionTarget hold_pose;
-                // hold_pose.position.x = uav_odom.pose.pose.position.y;
-                // hold_pose.position.y = uav_odom.pose.pose.position.x;
-                // hold_pose.position.z = -uav_odom.pose.pose.position.z;
-                // local_pos_pub.publish(hold_pose); 
                 break;
             }
 
-            case EXECUTE_TRAJECTORY:
-                if (trajectory_index < trajectory.size()) {
-                     mavros_msgs::PositionTarget traj_point;
-                     traj_point.header.stamp = ros::Time::now();     // 当前时间
-                     traj_point.header.frame_id = "world";           // 坐标系设置为 world
-                     traj_point.position.x =  trajectory[trajectory_index].position.y;
-                     traj_point.position.y =  trajectory[trajectory_index].position.x;
-                     traj_point.position.z =  -trajectory[trajectory_index].position.z;
-                     traj_point.yaw = 1.57;
-                     traj_point.yaw_rate = 0.0f;
+            case EXECUTE_TRAJECTORY:{
+                if (use_predefined_traj_)
+                {
+                    if (trajectory_index < trajectory.size()) {
+                        mavros_msgs::PositionTarget traj_point;
+                        traj_point.header.stamp = ros::Time::now();     // 当前时间
+                        traj_point.header.frame_id = "world";           // 坐标系设置为 world
+                        traj_point.position.x =  trajectory[trajectory_index].position.y;
+                        traj_point.position.y =  trajectory[trajectory_index].position.x;
+                        traj_point.position.z =  -trajectory[trajectory_index].position.z;
+                        traj_point.yaw = 1.57;
+                        traj_point.yaw_rate = 0.0f;
 
-                    local_pos_pub.publish(traj_point);
-                    trajectory_index++;
-                } else {
-                    // trajectory_index = 0; 
-                    uav_state = HOLD;     
+                        local_pos_pub.publish(traj_point);
+                        trajectory_index++;
+                    } else {
+                        uav_state = HOLD;     
+                    }
                 }
+                else
+                {
+                    mavros_msgs::PositionTarget traj_point;
+                    traj_point.header.stamp = ros::Time::now();     // 当前时间
+                    traj_point.header.frame_id = "world";           // 坐标系设置为 world
+                    traj_point.position.x = particle_cmd.position.y;
+                    traj_point.position.y = particle_cmd.position.x;
+                    traj_point.position.z = -particle_cmd.position.z;
+                    traj_point.yaw = 1.57;
+                    traj_point.yaw_rate = 0.0f;
+                    local_pos_pub.publish(traj_point);
+                }
+                
                 break;
-
+            }
             case LAND: {
                 static bool land_pose_published = false;
-		static mavros_msgs::PositionTarget land_pose;
+		        static mavros_msgs::PositionTarget land_pose;
                 if (!land_pose_published) {
                     //mavros_msgs::PositionTarget land_pose;
                     land_pose.header.stamp = ros::Time::now();     // 当前时间
@@ -345,7 +345,7 @@ int main(int argc, char** argv) {
 
                     land_pose_published = true; // 确保只发布一次
                 }
-		local_pos_pub.publish(land_pose);
+		        local_pos_pub.publish(land_pose);
 
 
                 if ((ros::Time::now() - state_entry_time).toSec() >= 6.0) {
@@ -354,12 +354,12 @@ int main(int argc, char** argv) {
                 break;
             }
 
-            case DISARM:
+            case DISARM:{
                 disarm(arming_client, local_pos_pub);
                 uav_state = IDLE;
                 break;
+            }
         }
-
 
         rate.sleep();
     }
