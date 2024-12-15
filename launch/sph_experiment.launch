@@ -173,6 +173,6 @@
     args="0.0 0.0 0 0.0 0.0 0.0 /global /ground_plane 200" />
 
     <!-- RViz-->
-    <node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(find so3_quadrotor_simulator)/config/experiment.rviz" />
+    <!-- <node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(find so3_quadrotor_simulator)/config/experiment.rviz" /> -->
     
 </launch>
