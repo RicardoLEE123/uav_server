@@ -51,7 +51,7 @@ void swarmParticlesCallback(const common_msgs::Swarm_particles::ConstPtr& msg)
     if (!msg->particles.empty()) {
         // 更新全局变量为第一个粒子的信息
         particle_cmd = msg->particles[0];
-        ROS_INFO_STREAM("Updated particle_cmd with index: " << particle_cmd.index);
+        // ROS_INFO_STREAM("Updated particle_cmd with index: " << particle_cmd.index);
     } else {
         ROS_WARN("Received /swarm_particles message, but no particles present.");
     }

@@ -9,7 +9,7 @@
     <arg name="particleCount" value="1"/>      <!-- 粒子的数量,确保你的内存足够大，一般要超过32G，16G最多支持20个左右的粒子 -->
     <arg name="particleInterval" value="0.5"/>  <!-- 粒子之间的初始间距 -->
     <arg name="particleVisScale" value="0.25"/> <!-- 粒子可视化尺寸 -->
-    <arg name="sphInitTime" value="10.0"/>       <!-- 初始化时间 -->
+    <arg name="sphInitTime" value="5.0"/>       <!-- 初始化时间 -->
     <arg name="init_bias_x" value="0.0"/>         <!-- 初始位置偏移量 -->
     <arg name="init_bias_y" value="0.0"/>         <!-- 初始位置偏移量 -->
     <arg name="updateInterval" value="0.02"/>   <!-- 时间步长，要与轨迹采样频率同步-->
@@ -45,7 +45,7 @@
     <arg name="fy" value="165.0"/>
     
     <!-- Run the sph_particles node -->
-    <node name="sph_zhang" pkg="water_swarm" type="sph_zhang" output="screen">
+    <node name="sph_realflight" pkg="water_swarm" type="sph_realflight" output="screen">
         <param name="sph/mass"              value="$(arg mass)"/> 
         <param name="sph/restDensity"       value="$(arg restDensity)"/>
         <param name="sph/h"                 value="$(arg h)"/> 
@@ -152,6 +152,7 @@
 
     <!-- UAV Server-->
     <node pkg="uav_server" type="uav_server" name="uav_server" output="screen" launch-prefix="taskset -c 0,1 nice -n -10 chrt -f 50">
+        <!-- <node pkg="uav_server" type="uav_server" name="uav_server" output="screen"> -->
         <param name="uav_server/loop_rate" value="50.0"/>
         <param name="uav_server/takeoff_height" value="1.0"/>
         <param name="uav_server/traj_file" value="$(find uav_server)/traj/traj_0.txt" />
@@ -172,6 +173,6 @@
     args="0.0 0.0 0 0.0 0.0 0.0 /global /ground_plane 200" />
 
     <!-- RViz-->
-    <!-- <node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(find so3_quadrotor_simulator)/config/experiment.rviz" /> -->
+    <node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(find so3_quadrotor_simulator)/config/experiment.rviz" />
     
 </launch>
