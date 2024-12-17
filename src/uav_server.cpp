@@ -325,9 +325,9 @@ int main(int argc, char** argv) {
                     traj_point.velocity.x = particle_cmd.velocity.x;
                     traj_point.velocity.y = particle_cmd.velocity.y;
                     traj_point.velocity.z = particle_cmd.velocity.z;
-                    traj_point.acceleration.x = particle_cmd.acceleration.x;
-                    traj_point.acceleration.y = particle_cmd.acceleration.y;
-                    traj_point.acceleration.z = particle_cmd.acceleration.z;
+                    traj_point.acceleration_or_force.x = particle_cmd.acceleration.x;
+                    traj_point.acceleration_or_force.y = particle_cmd.acceleration.y;
+                    traj_point.acceleration_or_force.z = particle_cmd.acceleration.z;
                     traj_point.yaw = 1.57;
                     traj_point.yaw_rate = 0.0f;
                     local_pos_pub.publish(traj_point);
