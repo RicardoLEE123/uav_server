@@ -261,6 +261,7 @@ int main(int argc, char** argv) {
         //         x = y
         //         y = x
         //         z = -z
+        // uav_state =EXECUTE_TRAJECTORY;
         switch (uav_state) 
         {
             case IDLE:{
@@ -322,12 +323,12 @@ int main(int argc, char** argv) {
                     traj_point.position.x = particle_cmd.position.y;
                     traj_point.position.y = particle_cmd.position.x;
                     traj_point.position.z = -takeoff_height;
-                    traj_point.velocity.x = particle_cmd.velocity.y;
-                    traj_point.velocity.y = particle_cmd.velocity.x;
-                    traj_point.velocity.z = -particle_cmd.velocity.z;
-                    traj_point.acceleration_or_force.x = particle_cmd.acceleration.y;
-                    traj_point.acceleration_or_force.y = particle_cmd.acceleration.x;
-                    traj_point.acceleration_or_force.z = -particle_cmd.acceleration.z;
+                    // traj_point.velocity.x = particle_cmd.velocity.y;
+                    // traj_point.velocity.y = particle_cmd.velocity.x;
+                    // traj_point.velocity.z = -particle_cmd.velocity.z;
+                    // traj_point.acceleration_or_force.x = particle_cmd.acceleration.y;
+                    // traj_point.acceleration_or_force.y = particle_cmd.acceleration.x;
+                    // traj_point.acceleration_or_force.z = -particle_cmd.acceleration.z;
                     traj_point.yaw = 1.57;
                     traj_point.yaw_rate = 0.0f;
                     local_pos_pub.publish(traj_point);
