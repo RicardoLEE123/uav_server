@@ -151,8 +151,7 @@
     </node>
 
     <!-- UAV Server-->
-    <!-- <node pkg="uav_server" type="uav_server" name="uav_server" output="screen" launch-prefix="taskset -c 0,1 nice -n -10 chrt -f 50"> -->
-        <node pkg="uav_server" type="uav_server" name="uav_server" output="screen">
+    <node pkg="uav_server" type="uav_server" name="uav_server" output="screen">
         <param name="uav_server/loop_rate" value="50.0"/>
         <param name="uav_server/takeoff_height" value="1.0"/>
         <param name="uav_server/traj_file" value="$(find uav_server)/traj/traj_0.txt" />
@@ -160,17 +159,9 @@
         <remap from="/uav_odom" to="/ov_msckf/odomimu" />
     </node>
     
-    <!-- Pose Transform-->
-    <node pkg="uav_server" type="camera_pose_tf" name="camera_pose_tf"/>
-
-    <node pkg="tf" type="static_transform_publisher" name="iris_0_map_to_world"
-    args="0.0 0.0 0 0.0 0.0 0.0 /world /map 200" />
-
-    <node pkg="tf" type="static_transform_publisher" name="iris_0_map_to_global"
-    args="0.0 0.0 0 0.0 0.0 0.0 /map /global 200" />
-
-    <node pkg="tf" type="static_transform_publisher" name="iris_0_world_to_ground_plane"
-    args="0.0 0.0 0 0.0 0.0 0.0 /global /ground_plane 200" />
+    <!-- Traj server-->
+    <node pkg="bspline_race" type="traj_server" name="traj_server" output="screen">
+    </node>
 
     <!-- RViz-->
     <node name="rviz" pkg="rviz" type="rviz" required="true" args="-d $(find so3_quadrotor_simulator)/config/experiment.rviz" />
