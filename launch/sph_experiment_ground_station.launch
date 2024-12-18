@@ -9,7 +9,7 @@
     <arg name="particleCount" value="1"/>      <!-- 粒子的数量,确保你的内存足够大，一般要超过32G，16G最多支持20个左右的粒子 -->
     <arg name="particleInterval" value="0.5"/>  <!-- 粒子之间的初始间距 -->
     <arg name="particleVisScale" value="0.25"/> <!-- 粒子可视化尺寸 -->
-    <arg name="sphInitTime" value="5.0"/>       <!-- 初始化时间 -->
+    <arg name="sphInitTime" value="3.0"/>       <!-- 初始化时间 -->
     <arg name="init_bias_x" value="0.0"/>         <!-- 初始位置偏移量 -->
     <arg name="init_bias_y" value="0.0"/>         <!-- 初始位置偏移量 -->
     <arg name="updateInterval" value="0.02"/>   <!-- 时间步长，要与轨迹采样频率同步-->
@@ -43,6 +43,8 @@
     <arg name="cy" value="192.0"/>
     <arg name="fx" value="165.0"/>
     <arg name="fy" value="165.0"/>
+    <!-- Obs map,based on the real environment.-->
+    <node pkg ="map_generator" name ="map_pub" type ="map_pub" output = "screen" args="$(find map_generator)/resource/door2.pcd"/>
     
     <!-- Run the sph_particles node -->
     <node name="sph_realflight" pkg="water_swarm" type="sph_realflight" output="screen">
@@ -125,6 +127,7 @@
         <param name="sdf_map/show_esdf_time" value="false"/>
         <param name="sdf_map/pose_type"     value="2"/>  
         <param name="sdf_map/frame_id"      value="world"/>
+        <param name="sdf_map/use_fake_point_cloud" value="true"/>
 
         <!-- geometric path searching -->
         <param name="astar/lambda_heu" value="10.0" type="double"/>
